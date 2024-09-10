@@ -1,0 +1,23 @@
+---
+title: "lulab.utils"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{lulab.utils}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(lulab.utils)
+```
+
+# Introduction
+
+This package provides a set of utility functions that are commonly used in the 'LuLab'.
