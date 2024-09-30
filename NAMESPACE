@@ -2,6 +2,7 @@
 
 export(Table1)
 export(check_cha)
+export(test_mirror)
 import(boot)
 importFrom(magrittr,"%<>%")
 importFrom(magrittr,"%>%")

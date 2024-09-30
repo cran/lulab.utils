@@ -1,9 +1,9 @@
-2ab92c5b91ab3273fb2ccaa81b05a2fc *DESCRIPTION
-1d70737315b46837601032d7dcfec0b0 *NAMESPACE
-0a64e8d481aff2006eb1af44d4b83127 *NEWS.md
+5638b0d89185f93bf65b317d2104c5e6 *DESCRIPTION
+cd57a81aaf7dfb7620217b9a567477cc *NAMESPACE
+811dd32077997c3f54f77ada99eb1aa4 *NEWS.md
 b2e0f15f9244ee3e9aa717ef13fb6e2a *R/SCI_TFL.R
 f68af81d5324ae8d837f681cb2ba49e6 *R/lulab.utils-package.R
-b6bedf0e940cec4e905198f159a7e3a8 *R/utilities.R
+ff74dfeacef55ebe400919583e9450b4 *R/utilities.R
 9ca2a5b76d7a34479e3c623333263b29 *README.md
 2baa877b9198c6cd7e653527b563719f *build/vignette.rds
 d5bce68ece260eaea9efd6bc0d60eb14 *inst/doc/lulab_utils.R
@@ -12,7 +12,9 @@ d5bce68ece260eaea9efd6bc0d60eb14 *inst/doc/lulab_utils.R
 5beeae26df5769524af9b4fe4d554aaf *man/Table1.Rd
 d02c8749f0df7ca0116e4c4ef57bd9fd *man/check_cha.Rd
 a700d7bc041716c2bdc06b6d5d433802 *man/lulab.utils-package.Rd
+ff065ffbc256380cec6725e89d29f895 *man/test_mirror.Rd
 007bff81c56453aea12106330a8b63d6 *tests/testthat.R
 d123e858dee8af2ad165356e8a8ce9b5 *tests/testthat/test-Table1.R
 77be4fbd36620703ad3ebd837a621161 *tests/testthat/test-check_cha.R
+e1f2bb809b117501c0f9b21ac123093f *tests/testthat/test-test_mirror.R
 4c8f31e2451c25393cb07876bd2c23ff *vignettes/lulab_utils.Rmd

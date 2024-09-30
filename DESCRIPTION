@@ -1,6 +1,6 @@
 Package: lulab.utils
 Title: Supporting Functions Maintained by Zhen Lu
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: 
     person("Zhen", "Lu", email = "luzh29@mail2.sysu.edu.cn", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-3481-6310"))
@@ -16,8 +16,8 @@ Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2024-09-06 07:57:04 UTC; luzh2
+Packaged: 2024-09-30 14:42:05 UTC; luzh2
 Author: Zhen Lu [aut, cre] (<https://orcid.org/0000-0002-3481-6310>)
 Maintainer: Zhen Lu <luzh29@mail2.sysu.edu.cn>
 Repository: CRAN
-Date/Publication: 2024-09-10 09:50:09 UTC
+Date/Publication: 2024-09-30 18:00:02 UTC
