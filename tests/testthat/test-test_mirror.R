@@ -1,3 +1,5 @@
+library(testthat)
+
 test_that("test CRAN mirror works", {
   mirrors= test_mirror(region = 'China')
 

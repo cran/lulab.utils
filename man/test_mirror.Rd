@@ -23,7 +23,7 @@ This function is used to test the speed of CRAN mirror.
 \examples{
 \donttest{
 test_mirror('China')
-}  
+}
 }
 \author{
 Zhen Lu

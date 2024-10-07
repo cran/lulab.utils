@@ -41,55 +41,55 @@ check_cha= function(col, df, verbose=TRUE){
 }
 
 
-#' Test speed of CRAN mirror 
+#' Test speed of CRAN mirror
 #'
-#' This function is used to test the speed of CRAN mirror.  
-#' @title test_mirror   
+#' This function is used to test the speed of CRAN mirror.
+#' @title test_mirror
 #' @rdname test_mirror
 #' @param region a character string, the region of the CRAN mirror, e.g. 'China'
 #' @param verbose logical, controlling the output
 #'
-#' @return a data.frame with the name, URL, and download time of the fastest CRAN mirror  
+#' @return a data.frame with the name, URL, and download time of the fastest CRAN mirror
 #' @author Zhen Lu
-#' @importFrom magrittr %>% 
+#' @importFrom magrittr %>%
 #' @export
 #'
 #' @examples
 #' \donttest{
 #' test_mirror('China')
-#' }  
+#' }
 test_mirror= function(region, verbose=TRUE){
   hosts= utils::getCRANmirrors() %>%
     dplyr::filter(!!dplyr::sym('Country') == region)
-  
+
   # Initialize a vector to store download times
   download_times <- numeric(nrow(hosts))
-  
+
   # Loop through each host and test download speed
   if (verbose) cat('Testing the download speed of CRAN mirrors...\n')
   for (i in 1:nrow(hosts)) {
     url <- paste0(hosts$URL[i], "src/contrib/PACKAGES.gz") # download the package list
     start_time <- Sys.time()
     tryCatch({
-      utils::download.file(url, destfile = tempfile(), quiet = TRUE) # test the download speed  
+      utils::download.file(url, destfile = tempfile(), quiet = TRUE) # test the download speed
       end_time <- Sys.time()
       download_times[i] <- as.numeric(difftime(end_time, start_time, units = "secs"))
     }, error = function(e) {
-      download_times[i] <- Inf
+      download_times[i] <- 999
     }, warning = function(w) {
-      download_times[i] <- Inf
+      download_times[i] <- 999
     }
     )
   }
-  
+
   # Add download times to the hosts dataframe
   hosts$download_time <- download_times
-  
+
   # Sort hosts by download time
-  hosts_sorted= hosts %>% 
-    dplyr::arrange(!!dplyr::sym("download_time")) %>% 
+  hosts_sorted= hosts %>%
+    dplyr::arrange(!!dplyr::sym("download_time")) %>%
     dplyr::select("Name", "URL", "download_time")
-  
+
   # reset the CRAN mirror
   # Set the fastest mirror as the new CRAN repository
   fastest_mirror <- hosts_sorted$URL[1]
@@ -99,8 +99,139 @@ test_mirror= function(region, verbose=TRUE){
     cat("You can use the following command to set the fastest CRAN mirror:\n")
     cat(sprintf("options(repos = c(CRAN = '%s'))\n", fastest_mirror))
   }
-  
+
   return(hosts_sorted)
 }
 
 
+
+#' Check if wget is installed
+#'
+#' This function is used to check if wget is installed on the system.
+#' @title check_wget
+#' @rdname check_wget
+#' 
+#' @return a logical value indicating whether wget is installed
+#' @author Zhen Lu
+#' @importFrom  magrittr %>%
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' check_wget()
+#' }
+check_wget <- function() {
+  # check if os is windows
+  if (Sys.info()["sysname"] != "Windows") {
+    message("This function is intended to check wget on Windows.")
+    message("Please install wget manually on your system.")
+    return(invisible(FALSE))
+  }
+
+  # Run the wget --version command
+  result_1= character(0)
+  tryCatch(
+    {
+      result_1 <- system("wget.exe --version", intern = TRUE, ignore.stderr = TRUE)
+    }, error = function(e) {
+      result_1 <- character(0)
+    }
+  )
+  if (length(result_1) > 0 && grepl("GNU Wget", result_1[1])) {
+    message("wget is already installed on your system.")
+    return(invisible(TRUE))
+  }
+
+  result= character(0)
+  tryCatch(
+    {
+      result <- system(sprintf("%s/wget.exe --version", rappdirs::user_data_dir(appname = "wget", appauthor="LuLab")), intern = TRUE, ignore.stderr = TRUE)
+    }, error = function(e) {
+      result <- character(0)
+    }
+  )
+  # Check the exit status
+  if (length(result) > 0 && grepl("GNU Wget", result[1])) {
+    message("wget is already installed on your system.")
+    return(invisible(TRUE))
+  } else {
+    message("wget is not installed.")
+
+    ask_yes_no <- utils::askYesNo("Do you want to download wget now?\n", prompts = getOption("askYesNo", gettext(c("Yes", "No", "Cancel"))), default = TRUE)
+    if(!interactive()) ask_yes_no= TRUE
+    if (is.na(ask_yes_no)) {
+      message("Please install wget manually on your system.")
+      return(invisible(FALSE))
+    }else if(ask_yes_no) {
+      url= "https://eternallybored.org/misc/wget/"
+      version= "1.21.4" #access date: 2024-10-02
+      arch= Sys.info()[["machine"]] %>% stringr::str_sub(-2,-1) %>% as.numeric()
+
+      url2= sprintf("%s/%s/%s/wget.exe", url, version, arch)
+      dir <- rappdirs::user_data_dir(appname = "wget", appauthor="LuLab")
+      if(!dir.exists(dir)) dir.create(dir, recursive = TRUE)
+      destfile= file.path(dir, "wget.exe")
+
+      # download wget
+      if(requireNamespace('httr2', quietly = TRUE)) {
+        req= httr2::request(url2) %>%
+          httr2::req_progress()
+
+        req %>% httr2::req_perform(path = destfile)
+      } else {
+        utils::download.file(url = url2, destfile = destfile)
+      }
+      message("wget is downloaded successfully.")
+      return(invisible(TRUE))
+    } else {
+      message("Please install wget manually on your system.")
+      return(invisible(FALSE))
+    }
+  }
+}
+
+#' Use wget to download files
+#' 
+#' This function is used to set the download method.
+#' @title use_wget
+#' @rdname use_wget
+#' @param use a logical value, controlling the download method
+#' 
+#' @return a logical value indicating whether wget is used
+#' @author Zhen Lu
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' use_wget(use = TRUE)
+#' getOption("download.file.method")
+#' getOption("download.file.extra") 
+#' test_url <- "https://eternallybored.org/misc/wget/1.21.4/64/wget.exe"
+#' test_destfile <- tempfile()
+#' download.file(test_url, destfile = test_destfile)
+#' }
+use_wget <- function(use = TRUE) {
+  # check if wget is installed
+  wget= check_wget()
+
+  if (!use) {
+    message("But we will use the default download method.")
+    options(download.file.method = NULL)
+    options(download.file.extra = NULL)
+    return(invisible(FALSE))
+  }
+
+  if(!wget){
+    return(invisible(FALSE))
+  }else{
+    message("And we will use wget to download files.")
+    PATH= Sys.getenv('PATH')
+    if (!grepl("wget", PATH)){
+      Sys.setenv(PATH = sprintf("%s;%s", rappdirs::user_data_dir(appname = "wget", appauthor="LuLab"), PATH))
+    }
+
+    options(download.file.method = "wget")
+    options(download.file.extra = c("-c"))
+    return(invisible(TRUE))
+  }
+}

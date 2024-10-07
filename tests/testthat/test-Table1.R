@@ -1,5 +1,4 @@
 library(testthat)
-library(magrittr)
 data("melanoma", package = "boot")
 
 test_that("making Table1 in SCI papers works", {

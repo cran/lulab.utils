@@ -2,7 +2,9 @@
 
 export(Table1)
 export(check_cha)
+export(check_wget)
 export(test_mirror)
+export(use_wget)
 import(boot)
 importFrom(magrittr,"%<>%")
 importFrom(magrittr,"%>%")

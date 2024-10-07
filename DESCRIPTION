@@ -1,6 +1,6 @@
 Package: lulab.utils
 Title: Supporting Functions Maintained by Zhen Lu
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: 
     person("Zhen", "Lu", email = "luzh29@mail2.sysu.edu.cn", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-3481-6310"))
@@ -10,14 +10,14 @@ URL: https://leslie-lu.github.io/
 BugReports: https://github.com/Leslie-Lu/lulab.utils/issues
 Encoding: UTF-8
 RoxygenNote: 7.3.1
-Imports: boot, car, descr, dplyr, magrittr, openxlsx, purrr, stringr,
-        table1
+Imports: boot, car, descr, dplyr, httr2, magrittr, openxlsx, purrr,
+        rappdirs, stringr, table1, utils
 Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2024-09-30 14:42:05 UTC; luzh2
+Packaged: 2024-10-07 16:01:55 UTC; luzh2
 Author: Zhen Lu [aut, cre] (<https://orcid.org/0000-0002-3481-6310>)
 Maintainer: Zhen Lu <luzh29@mail2.sysu.edu.cn>
 Repository: CRAN
-Date/Publication: 2024-09-30 18:00:02 UTC
+Date/Publication: 2024-10-07 16:20:02 UTC
