@@ -235,3 +235,20 @@ use_wget <- function(use = TRUE) {
     return(invisible(TRUE))
   }
 }
+
+#' @title round2
+#' @description Round a number to a specified number of decimal places.
+#' @param x The numeric input to be rounded.
+#' @param digits The number of decimal places to round to, Default: digits
+#' @return The rounded numeric value.
+#' @details This function rounds the input number to the specified number of decimal places.
+#' @rdname round2
+#' @export 
+round2 = function(x, digits = digits) {
+  posneg = sign(x)
+  z = abs(x)*10^digits
+  z = z + 0.5 + sqrt(.Machine$double.eps)
+  z = trunc(z)
+  z = z/10^digits
+  return(z*posneg)
+}

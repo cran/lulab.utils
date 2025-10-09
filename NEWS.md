@@ -1,3 +1,11 @@
+# lulab.utils 1.0.0
+
++ fix: 🚧 Removed `Table1` function temporarily due to the incompatibility with the latest version of the `Table1` package.
+
+# lulab.utils 0.1.0
+
++ feat: ✨ Add new functions: `round2` and `extract_logistic_model`
+
 # lulab.utils 0.0.4
 
 + `check_wget()` & `use_wget()`

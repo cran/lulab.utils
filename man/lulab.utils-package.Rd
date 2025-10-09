@@ -11,7 +11,7 @@ Miscellaneous functions commonly used by LuLab. This package aims to help more r
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://leslie-lu.github.io/}
+  \item \url{https://github.com/Leslie-Lu/lulab.utils}
   \item Report bugs at \url{https://github.com/Leslie-Lu/lulab.utils/issues}
 }
 
