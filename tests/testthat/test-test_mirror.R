@@ -1,6 +1,8 @@
 library(testthat)
 
 test_that("test CRAN mirror works", {
+  skip_if_not(Sys.getenv("RUN_NETWORK_TESTS") == "true")
+
   mirrors= test_mirror(region = 'China')
 
   # check the result

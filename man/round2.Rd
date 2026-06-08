@@ -4,7 +4,7 @@
 \alias{round2}
 \title{round2}
 \usage{
-round2(x, digits = digits)
+round2(x, digits = 0)
 }
 \arguments{
 \item{x}{The numeric input to be rounded.}

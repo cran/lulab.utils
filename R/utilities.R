@@ -22,16 +22,21 @@
 #' mapply(check_cha,'status', MoreArgs= list(melanoma2))
 #' }
 check_cha= function(col, df, verbose=TRUE){
-  raw= df
-
-  na_idi= c((purrr::map(raw[col],is.na) %>% unlist) |
-              (purrr::map(raw[col],is.null) %>% unlist) |
-              (purrr::map(raw[col],function(y) y %in% c('Missing','')) %>% unlist))
-  if(sum(na_idi)>0){
-    raw[col][[1]][na_idi]= 'Missing'
+  if (!is.character(col) || length(col) != 1 || !col %in% names(df)) {
+    stop("`col` must be a single column name in `df`.", call. = FALSE)
+  }
+  if (!is.data.frame(df)) {
+    stop("`df` must be a data frame.", call. = FALSE)
   }
 
-  r1= raw[col][[1]] %>% table %>% prop.table() %>% round(2)
+  raw= df
+  values <- as.character(raw[[col]])
+  na_idi= is.na(values) | values %in% c('Missing','')
+  if(sum(na_idi)>0){
+    values[na_idi]= 'Missing'
+  }
+
+  r1= values %>% table %>% prop.table() %>% round(2)
 
   if(sum(na_idi)>0){
     r1= r1[c('Missing', setdiff(names(r1),c('Missing')))]
@@ -157,8 +162,11 @@ check_wget <- function() {
   } else {
     message("wget is not installed.")
 
+    if (!interactive()) {
+      message("Please install wget manually on your system.")
+      return(invisible(FALSE))
+    }
     ask_yes_no <- utils::askYesNo("Do you want to download wget now?\n", prompts = getOption("askYesNo", gettext(c("Yes", "No", "Cancel"))), default = TRUE)
-    if(!interactive()) ask_yes_no= TRUE
     if (is.na(ask_yes_no)) {
       message("Please install wget manually on your system.")
       return(invisible(FALSE))
@@ -211,15 +219,15 @@ check_wget <- function() {
 #' download.file(test_url, destfile = test_destfile)
 #' }
 use_wget <- function(use = TRUE) {
-  # check if wget is installed
-  wget= check_wget()
-
   if (!use) {
-    message("But we will use the default download method.")
+    message("We will use the default download method.")
     options(download.file.method = NULL)
     options(download.file.extra = NULL)
     return(invisible(FALSE))
   }
+
+  # check if wget is installed
+  wget= check_wget()
 
   if(!wget){
     return(invisible(FALSE))
@@ -244,7 +252,14 @@ use_wget <- function(use = TRUE) {
 #' @details This function rounds the input number to the specified number of decimal places.
 #' @rdname round2
 #' @export 
-round2 = function(x, digits = digits) {
+round2 = function(x, digits = 0) {
+  if (!is.numeric(x)) {
+    stop("`x` must be numeric.", call. = FALSE)
+  }
+  if (!is.numeric(digits) || length(digits) != 1 || is.na(digits)) {
+    stop("`digits` must be a single number.", call. = FALSE)
+  }
+  digits <- as.integer(digits)
   posneg = sign(x)
   z = abs(x)*10^digits
   z = z + 0.5 + sqrt(.Machine$double.eps)

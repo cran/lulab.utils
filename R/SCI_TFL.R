@@ -1,207 +1,234 @@
-# #' Make Table1
-# #'
-# #' This function is used to make Table1 and return excel file.
-# #' @title Table1
-# #' @rdname Table1
-# #' @param df a data.frame
-# #' @param ycol a grouping variable
-# #' @param xcol variables to be compared
-# #' @param xlabels levels of ycol
-# #' @param result_dir directory to save the result
-# #' @param verbose logical, controlling the output
-# #'
-# #' @return excel file
-# #' @author Zhen Lu
-# #' @importFrom magrittr %>%
-# #' @importFrom magrittr %<>%
-# #' @import boot
-# #' @export
-# #'
-# #' @examples
-# #' \donttest{
-# #' data("melanoma", package = "boot")
-# #' melanoma2 <- melanoma
-# #' # Factor the basic variables that
-# #' # we're interested in
-# #' melanoma2$status <-
-# #'   factor(melanoma2$status,
-# #'          levels=c(2,1,3),
-# #'          labels=c("Alive", # Reference
-# #'                   "Melanoma death",
-# #'                   "Non-melanoma death"))
-# #' test= Table1(
-# #'   df= melanoma2,
-# #'   xcol= setdiff(names(melanoma2), "status"),
-# #'   ycol= "status",
-# #'   result_dir= tempdir()
-# #' )
-# #' }
-# Table1<-function(df,ycol,xcol,xlabels,result_dir,verbose=TRUE){
-#   if(any(c(missing(df),missing(xcol),missing(ycol)))){
-#     return("parameters missing! arg1 data.frame, arg2 ycol, arg3 xcol")
-#   }
-#   else if(!all(c(is.data.frame(df),is.character(xcol),is.character(ycol)))==TRUE){
-#     return("parameter type error! arg1 data.frame, arg2,arg3 character vector")
-#   }
+#' Make a Table 1 summary
+#'
+#' Create a stratified Table 1, save it as an Excel workbook, and return the
+#' table as a data frame.
+#'
+#' @param df A data frame.
+#' @param ycol A single character string naming the grouping variable.
+#' @param xcol A character vector naming variables to summarize.
+#' @param xlabels Optional labels for the groups. Defaults to the observed
+#'   levels of `ycol`.
+#' @param result_dir Directory where `Table1.xlsx` will be saved.
+#' @param verbose Logical; if `TRUE`, print the output path.
+#'
+#' @return A data frame containing the rendered Table 1.
+#' @author Zhen Lu
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' data("melanoma", package = "boot")
+#' melanoma2 <- melanoma
+#' melanoma2$status <- factor(
+#'   melanoma2$status,
+#'   levels = c(2, 1, 3),
+#'   labels = c("Alive", "Melanoma death", "Non-melanoma death")
+#' )
+#' Table1(
+#'   df = melanoma2,
+#'   ycol = "status",
+#'   xcol = c("time", "age", "sex"),
+#'   result_dir = tempdir()
+#' )
+#' }
+Table1 <- function(df, ycol, xcol, xlabels = NULL, result_dir, verbose = TRUE) {
+  if (missing(df) || missing(ycol) || missing(xcol) || missing(result_dir)) {
+    stop("`df`, `ycol`, `xcol`, and `result_dir` are required.", call. = FALSE)
+  }
+  if (!is.data.frame(df)) {
+    stop("`df` must be a data frame.", call. = FALSE)
+  }
+  if (!is.character(ycol) || length(ycol) != 1 || !ycol %in% names(df)) {
+    stop("`ycol` must be a single column name in `df`.", call. = FALSE)
+  }
+  if (!is.character(xcol) || length(xcol) < 1 || !all(xcol %in% names(df))) {
+    stop("`xcol` must contain column names in `df`.", call. = FALSE)
+  }
+  if (!dir.exists(result_dir)) {
+    dir.create(result_dir, recursive = TRUE, showWarnings = FALSE)
+  }
 
-#   if(nrow(df)>5000){
-#     shapiro.test= function(x) stats::ks.test(x, 'pnorm')
-#   }
+  df[[ycol]] <- .lulab_prepare_group(df[[ycol]], xlabels)
+  xlabels <- levels(df[[ycol]])
 
-#   xlabels= levels(df[[ycol]])
-#   df[[ycol]]= factor(df[[ycol]],levels= c(xlabels,'P-value'), labels=c(xlabels,'P-value'))
-#   levels= (nlevels(df[[ycol]])-1) %>% as.numeric()
-#   rndr <- function(x, name, ...) {
-#     if (length(x) == 0) {
-#       y <- df[[name]]
-#       s1 <- rep("", length(table1::render.default(x=y, name=name, ...)))
-#       if (is.numeric(y)) {
-#         if ((levels-2)==0){
-#           if(shapiro.test(y[df[[ycol]]==xlabels[[1]]])$p.value > .05 &
-#              shapiro.test(y[df[[ycol]]==xlabels[[2]]])$p.value > .05)
-#           {
-#             if(car::leveneTest(y~df[[ycol]]) %>% `$`('Pr(>F)') %>% `[[`(1) > .05){
-#               p= stats::t.test(y ~ df[[ycol]],paired = FALSE, var.equal = T,
-#                         alternative="two.sided",conf.level=0.95)$p.value
-#               v= stats::t.test(y ~ df[[ycol]],paired = FALSE, var.equal = T,
-#                         alternative="two.sided",conf.level=0.95)$statistic
-#             }
-#             else{
-#               p= stats::t.test(y ~ df[[ycol]],paired = FALSE, var.equal = FALSE,
-#                         alternative="two.sided",conf.level=0.95)$p.value
-#               v= stats::t.test(y ~ df[[ycol]],paired = FALSE, var.equal = FALSE,
-#                         alternative="two.sided",conf.level=0.95)$statistic
-#             }
-#           }else{
-#             p= stats::wilcox.test(y ~ df[[ycol]],conf.level=0.95)$p.value
-#             v= stats::wilcox.test(y ~ df[[ycol]],conf.level=0.95)$statistic
-#           }
-#         }else{
-#           p1= logical(levels)
-#           for (i in seq(levels)) {
-#             p_try= try(shapiro.test(y[df[[ycol]]==xlabels[[i]]])$p.value)
-#             if('try-error' %in% class(p_try)){
-#               p1[i]= FALSE
-#             }else{
-#               p1[i]= shapiro.test(y[df[[ycol]]==xlabels[[i]]])$p.value > .05
-#             }
-#           }
-#           if(all(isTRUE(p1))){
-#             p2= (car::leveneTest(y~df[[ycol]]) %>% `$`('Pr(>F)') %>% `[[`(1)) > .05
-#             if(p2){
-#               p= stats::aov(y~df[[ycol]]) %>% summary() %>% `[[`(1) %>%
-#                 `$`('Pr(>F)') %>% `[[`(1)
-#               v= stats::aov(y~df[[ycol]]) %>% summary() %>% `[[`(1) %>%
-#                 `$`('F value') %>% `[[`(1)
-#             }else{
-#               p= stats::kruskal.test(y~df[[ycol]])$p.value
-#               v= stats::kruskal.test(y~df[[ycol]])$statistic
-#             }
-#           }else{
-#             p= stats::kruskal.test(y~df[[ycol]])$p.value
-#             v= stats::kruskal.test(y~df[[ycol]])$statistic
-#           }
-#         }
-#       } else {
-#         if((levels-2)==0){
-#           T= function(a){
-#             A= matrix(0, nrow(a), ncol(a))
-#             for(i in 1:nrow(a)){
-#               for(j in 1:ncol(a)){
-#                 t1= sum(a[i,])
-#                 t2= sum(a[,j])
-#                 A[i,j] = t1*(t2/sum(a))
-#               }
-#             }
-#             A
-#           }
-#           mytable= stats::xtabs(~droplevels(y) + droplevels(df[[ycol]]))
-#           if(nrow(df) < 40){
-#             p= stats::fisher.test(mytable)$p.value
-#           }else{
-#             if(nrow(mytable)>=3){
-#               p= stats::chisq.test(mytable,correct = FALSE)$p.value
-#             }else{
-#               if(any(T(mytable)<1)){
-#                 p= stats::fisher.test(mytable)$p.value
-#               }else{
-#                 if(any(T(mytable)<5)){
-#                   p= try(stats::chisq.test(mytable,correct = T)$p.value)
-#                   if('try-error' %in% class(p)){
-#                     p= stats::chisq.test(mytable,correct = FALSE)$p.value
-#                   }
-#                 }else{
-#                   p= stats::chisq.test(mytable,correct = FALSE)$p.value
-#                 }
-#               }
-#             }
-#           }
-#         }else{
-#           chisq= descr::CrossTable(df[[ycol]], y,drop.levels = T,
-#                                    prop.chisq = T, chisq = T)
-#           # browser()
-#           if(dim(chisq$prop.row)[2] != 1){
-#             p= chisq$CST$p.value
-#             v= chisq$CST$statistic}
-#           else{
-#             chisq= descr::CrossTable(df[[ycol]], y,drop.levels = FALSE,
-#                                      prop.chisq = T, chisq = T)
-#             p= NA
-#             v= NA
-#           }
-#         }
-#       }
-#       s1[1]= p %>% round(., 3) %>% format(.,nsmall = 3) %>%
-#         dplyr::if_else(.=='0.000','<0.001',.)
-#       s1[2]= v %>% round(., 3) %>% format(.,nsmall = 3)
-#       s1
-#     } else {
-#       table1::render.default(x=x, name=name, ...)
-#     }
-#   }
+  render_strat <- function(strata, ...) {
+    labels <- names(strata)
+    n <- vapply(strata, nrow, integer(1))
+    ifelse(n == 0, labels, sprintf("%s<br/>(N=%d)", labels, n))
+  }
 
-#   rndr.strat <- function(label, n, ...) {
-#     ifelse(n==0, label, table1::render.strat.default(label, n, ...))
-#   }
+  render_continuous <- function(x) {
+    stats <- table1::stats.default(x)
+    mean_sd <- sprintf("%.02f \u00B1 %.02f", stats$MEAN, stats$SD)
+    median_iqr <- sprintf("%.02f (%.02f, %.02f)", stats$MEDIAN, stats$Q1, stats$Q3)
 
-#   my.render.cont <- function(x) {
-#     with(table1::stats.default(x),
-#          if(length(table(x))==1){
-#            c('',`Mean &plusmn; SD`= sprintf("%.02f &plusmn; %.02f", MEAN, SD),
-#              `Median (Q1, Q3)` = sprintf("%.02f (%.02f, %.02f)",
-#                                          MEDIAN, Q1, Q3))}
-#          else if(shapiro.test(x)$p.value > .05){
-#            c('',`Mean &plusmn; SD`= sprintf("%.02f &plusmn; %.02f", MEAN, SD),
-#              `Median (Q1, Q3)` = sprintf("%.02f (%.02f, %.02f)",
-#                                          MEDIAN, Q1, Q3))
-#          }else{
-#            c('',
-#              `Median (Q1, Q3)` = sprintf("%.02f (%.02f, %.02f)",
-#                                          MEDIAN, Q1, Q3),
-#              `Mean &plusmn; SD`= sprintf("%.02f &plusmn; %.02f", MEAN, SD))
-#          })
-#   }
+    if (.lulab_is_normal(x)) {
+      c("", `Mean +/- SD` = mean_sd, `Median (Q1, Q3)` = median_iqr)
+    } else {
+      c("", `Median (Q1, Q3)` = median_iqr, `Mean +/- SD` = mean_sd)
+    }
+  }
 
-#   my.render.cat <- function(x) {
-#     c("", sapply(table1::stats.default(x), function(y) with(y,
-#                                                     sprintf("%d (%0.2f)", FREQ, PCT))))
-#   }
+  render_categorical <- function(x) {
+    c("", vapply(table1::stats.default(x), function(y) {
+      sprintf("%d (%.02f)", y$FREQ, y$PCT)
+    }, character(1)))
+  }
 
-#   result= table1::table1(stats::as.formula(paste("~",paste(xcol,collapse = "+"),"|",ycol)),
-#          data=df, droplevels=FALSE, render=rndr, render.strat=rndr.strat,
-#          render.continuous=my.render.cont,
-#          render.categorical=my.render.cat,
-#          overall= 'Total')
-#   result %<>% as.data.frame() %>%
-#     sapply(function(x) x %>% stringr::str_replace_all(., '&plusmn;', "\u00B1")) %>%
-#     as.data.frame() 
-#   result %>%
-#     openxlsx::write.xlsx(
-#       file= file.path(result_dir,'Table1.xlsx'),
-#       asTable= TRUE
-#     )
-#   if(verbose){
-#     cat(sprintf('Table1.xlsx has been saved in your specified folder of:\n%s\n',result_dir))
-#   }
-#   return(result)
-# }
+  pvalue_column <- function(x, name, ...) {
+    test <- .lulab_group_test(x)
+    rendered <- table1::render.default(x = .lulab_combine_strata(x), name = name, ...)
+    c(.lulab_format_pvalue(test$p_value), rep("", max(length(rendered) - 1, 0)))
+  }
+
+  formula <- stats::as.formula(paste("~", paste(xcol, collapse = "+"), "|", ycol))
+  result <- table1::table1(
+    formula,
+    data = df,
+    droplevels = FALSE,
+    render.strat = render_strat,
+    render.continuous = render_continuous,
+    render.categorical = render_categorical,
+    extra.col = list(`P-value` = pvalue_column),
+    overall = "Total"
+  )
+
+  result <- as.data.frame(result, stringsAsFactors = FALSE)
+  empty_names <- which(names(result) == "")
+  if (length(empty_names) > 0L) {
+    names(result)[empty_names[1]] <- "P-value"
+  }
+  output_file <- file.path(result_dir, "Table1.xlsx")
+  openxlsx::write.xlsx(result, file = output_file, asTable = TRUE)
+
+  if (isTRUE(verbose)) {
+    cat(sprintf("Table1.xlsx has been saved in your specified folder of:\n%s\n", result_dir))
+  }
+
+  result
+}
+
+.lulab_prepare_group <- function(x, xlabels = NULL) {
+  if (is.null(xlabels)) {
+    if (is.factor(x)) {
+      xlabels <- levels(droplevels(x))
+    } else {
+      xlabels <- unique(stats::na.omit(as.character(x)))
+    }
+  }
+  factor(x, levels = xlabels)
+}
+
+.lulab_combine_strata <- function(x) {
+  if (any(vapply(x, is.factor, logical(1)))) {
+    levels <- unique(unlist(lapply(x, levels), use.names = FALSE))
+    factor(unlist(lapply(x, as.character), use.names = FALSE), levels = levels)
+  } else {
+    unlist(x, use.names = FALSE)
+  }
+}
+
+.lulab_is_normal <- function(x) {
+  x <- stats::na.omit(x)
+  if (!is.numeric(x) || length(unique(x)) < 3L) {
+    return(FALSE)
+  }
+  if (length(x) > 5000L) {
+    return(stats::ks.test(scale(x), "pnorm")$p.value > 0.05)
+  }
+  stats::shapiro.test(x)$p.value > 0.05
+}
+
+.lulab_group_test <- function(x) {
+  is_numeric_variable <- all(vapply(x, is.numeric, logical(1)))
+  values <- if (is_numeric_variable) {
+    unlist(x, use.names = FALSE)
+  } else {
+    unlist(lapply(x, as.character), use.names = FALSE)
+  }
+  group <- rep(seq_along(x), lengths(x))
+  ok <- !is.na(values) & !is.na(group)
+  values <- values[ok]
+  group <- factor(group[ok])
+
+  if (length(values) == 0L || nlevels(group) < 2L) {
+    return(.lulab_test_result(NA_real_, NA_real_, "not enough groups"))
+  }
+
+  if (is_numeric_variable) {
+    .lulab_numeric_group_test(values, group)
+  } else {
+    .lulab_categorical_group_test(values, group)
+  }
+}
+
+.lulab_numeric_group_test <- function(values, group) {
+  group_sizes <- table(group)
+  if (any(group_sizes < 2L) || length(unique(values)) < 2L) {
+    return(.lulab_test_result(NA_real_, NA_real_, "not enough observations"))
+  }
+
+  normal_by_group <- tapply(values, group, .lulab_is_normal)
+  all_normal <- all(unlist(normal_by_group), na.rm = TRUE)
+
+  if (nlevels(group) == 2L) {
+    if (all_normal) {
+      variance_p <- tryCatch(stats::var.test(values ~ group)$p.value, error = function(e) NA_real_)
+      var_equal <- is.na(variance_p) || variance_p > 0.05
+      test <- stats::t.test(values ~ group, var.equal = var_equal)
+      .lulab_test_result(unname(test$p.value), unname(test$statistic), ifelse(var_equal, "two-sample t-test", "Welch t-test"))
+    } else {
+      test <- stats::wilcox.test(values ~ group, exact = FALSE)
+      .lulab_test_result(unname(test$p.value), unname(test$statistic), "Wilcoxon rank-sum test")
+    }
+  } else if (all_normal) {
+    variance_p <- tryCatch(stats::bartlett.test(values ~ group)$p.value, error = function(e) NA_real_)
+    if (is.na(variance_p) || variance_p > 0.05) {
+      model <- stats::aov(values ~ group)
+      summary_model <- summary(model)[[1]]
+      .lulab_test_result(summary_model[["Pr(>F)"]][1], summary_model[["F value"]][1], "ANOVA")
+    } else {
+      test <- stats::kruskal.test(values ~ group)
+      .lulab_test_result(unname(test$p.value), unname(test$statistic), "Kruskal-Wallis test")
+    }
+  } else {
+    test <- stats::kruskal.test(values ~ group)
+    .lulab_test_result(unname(test$p.value), unname(test$statistic), "Kruskal-Wallis test")
+  }
+}
+
+.lulab_categorical_group_test <- function(values, group) {
+  values <- factor(values)
+  tbl <- table(values, group)
+  if (nrow(tbl) < 2L || ncol(tbl) < 2L || any(rowSums(tbl) == 0L) || any(colSums(tbl) == 0L)) {
+    return(.lulab_test_result(NA_real_, NA_real_, "not enough categories"))
+  }
+
+  chi <- suppressWarnings(stats::chisq.test(tbl, correct = FALSE))
+  use_fisher <- any(chi$expected < 5) || sum(tbl) < 40L
+
+  if (use_fisher) {
+    fisher <- tryCatch(
+      stats::fisher.test(tbl),
+      error = function(e) stats::fisher.test(tbl, simulate.p.value = TRUE, B = 2000)
+    )
+    .lulab_test_result(unname(fisher$p.value), NA_real_, "Fisher exact test")
+  } else {
+    .lulab_test_result(unname(chi$p.value), unname(chi$statistic), "Pearson chi-square test")
+  }
+}
+
+.lulab_test_result <- function(p_value, statistic, test_name) {
+  list(p_value = p_value, statistic = statistic, test_name = test_name)
+}
+
+.lulab_format_pvalue <- function(p_value) {
+  if (length(p_value) == 0L || is.na(p_value)) {
+    return("")
+  }
+  if (p_value < 0.001) {
+    "<0.001"
+  } else {
+    format(round(p_value, 3), nsmall = 3)
+  }
+}

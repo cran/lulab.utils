@@ -21,3 +21,38 @@ library(lulab.utils)
 # Introduction
 
 This package provides a set of utility functions that are commonly used in the 'LuLab'.
+
+## Data checks
+
+```{r}
+data("melanoma", package = "boot")
+check_cha("status", melanoma)
+```
+
+## Numeric rounding
+
+```{r}
+round2(c(1.25, -1.25), digits = 1)
+```
+
+## Table 1
+
+`Table1()` creates a stratified summary table and writes `Table1.xlsx` to the
+specified directory.
+
+```{r}
+melanoma2 <- melanoma
+melanoma2$status <- factor(
+  melanoma2$status,
+  levels = c(2, 1, 3),
+  labels = c("Alive", "Melanoma death", "Non-melanoma death")
+)
+
+head(Table1(
+  df = melanoma2,
+  ycol = "status",
+  xcol = c("time", "age", "sex"),
+  result_dir = tempdir(),
+  verbose = FALSE
+))
+```

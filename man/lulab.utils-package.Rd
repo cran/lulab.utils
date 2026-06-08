@@ -17,7 +17,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Zhen Lu \email{luzh29@mail2.sysu.edu.cn} (\href{https://orcid.org/0000-0002-3481-6310}{ORCID})
+\strong{Maintainer}: Zhen Lu \email{Zhen.Lu.VA@gmail.com} (\href{https://orcid.org/0000-0002-3481-6310}{ORCID})
+
+Authors:
+\itemize{
+  \item Zhen Lu \email{Zhen.Lu.VA@gmail.com} (\href{https://orcid.org/0000-0002-3481-6310}{ORCID})
+}
 
 }
 \keyword{internal}
